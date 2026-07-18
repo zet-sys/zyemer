@@ -1,4 +1,4 @@
-<!<!DOCTYPE html>    
+<!DOCTYPE html>    
 <html lang="id">    
 <head>    
     <meta charset="UTF-8">    
@@ -17,6 +17,12 @@
             --text-secondary: #333333;    
             --accent-black: #000000;    
             --accent-red: #ff0000;    
+            --accent-lime: #00ff00;    
+            --accent-cyan: #00d4ff;    
+            --accent-magenta: #ff00ff;    
+            --accent-yellow: #ffff00;    
+            --accent-purple: #9900ff;    
+            --accent-orange: #ff6600;    
             --border-thick: 4px;    
             --border-medium: 2px;    
         }    
@@ -52,11 +58,24 @@
             position: relative;    
             overflow: hidden;    
         }    
+        .premium-card:nth-child(1) { border-color: #ff0000; }    
+        .premium-card:nth-child(2) { border-color: #00ff00; }    
+        .premium-card:nth-child(3) { border-color: #00d4ff; }    
+        .premium-card:nth-child(4) { border-color: #ff00ff; }    
+        .premium-card:nth-child(5) { border-color: #ffff00; color: #000000; }    
+        .premium-card:nth-child(6) { border-color: #9900ff; }    
+        .premium-card:nth-child(7) { border-color: #ff6600; }    
         .premium-card:hover {    
             transform: translate(-2px, -2px);    
-            box-shadow: 10px 10px 0px #000000;    
-            border-color: #ff0000;    
+            filter: brightness(1.1);    
         }    
+        .premium-card:nth-child(1):hover { box-shadow: 10px 10px 0px #ff0000; }    
+        .premium-card:nth-child(2):hover { box-shadow: 10px 10px 0px #00ff00; }    
+        .premium-card:nth-child(3):hover { box-shadow: 10px 10px 0px #00d4ff; }    
+        .premium-card:nth-child(4):hover { box-shadow: 10px 10px 0px #ff00ff; }    
+        .premium-card:nth-child(5):hover { box-shadow: 10px 10px 0px #ffff00; }    
+        .premium-card:nth-child(6):hover { box-shadow: 10px 10px 0px #9900ff; }    
+        .premium-card:nth-child(7):hover { box-shadow: 10px 10px 0px #ff6600; }    
         .premium-card::before {    
             content: '';    
             position: absolute;    
@@ -82,9 +101,9 @@
             overflow: hidden;    
         }    
         .glass-input:focus-within {    
-            border-color: #ff0000;    
-            background: #fffaff;    
-            box-shadow: 4px 4px 0px #ff0000;    
+            border-color: #00d4ff;    
+            background: #f0fffe;    
+            box-shadow: 4px 4px 0px #00d4ff;    
         }    
         .glass-input input {    
             background: transparent;    
@@ -119,12 +138,13 @@
         .api-terminal {    
             background: #000000;    
             background-image: none;    
-            color: #ffffff;    
+            color: #00ff00;    
             font-family: 'JetBrains Mono', monospace;    
-            border: 4px solid #000000;    
+            border: 4px solid #00ff00;    
             border-radius: 0;    
             position: relative;    
             font-weight: 700;    
+            box-shadow: 6px 6px 0px #00ff00;    
         }    
         .api-terminal .dots {    
             position: absolute;    
@@ -140,9 +160,9 @@
             border-radius: 50%;    
             display: block;    
         }    
-        .api-terminal .dots span:nth-child(1) { background: #ff0000; }    
-        .api-terminal .dots span:nth-child(2) { background: #000000; }    
-        .api-terminal .dots span:nth-child(3) { background: #cccccc; }    
+        .api-terminal .dots span:nth-child(1) { background: #ff0000; box-shadow: 0 0 10px #ff0000; }    
+        .api-terminal .dots span:nth-child(2) { background: #ffff00; box-shadow: 0 0 10px #ffff00; }    
+        .api-terminal .dots span:nth-child(3) { background: #00ff00; box-shadow: 0 0 10px #00ff00; }    
         .api-terminal pre {    
             padding-top: 36px;    
             scrollbar-width: thin;    
@@ -165,9 +185,10 @@
             align-items: center;    
             gap: 6px;    
             transition: all 0.1s linear;    
-            border: 2px solid #000000;    
-            background: #ffffff;    
-            color: #000000;    
+            border: 3px solid #00d4ff;    
+            background: #000000;    
+            color: #00d4ff;    
+            box-shadow: 3px 3px 0px #00d4ff;    
         }    
     
         .btn-primary {    
@@ -178,7 +199,7 @@
             border-radius: 0;    
             padding: 18px 28px;    
             transition: all 0.1s linear;    
-            border: 4px solid #000000;    
+            border: 4px solid #00d4ff;    
             cursor: pointer;    
             display: inline-flex;    
             align-items: center;    
@@ -188,17 +209,17 @@
             width: 100%;    
             position: relative;    
             overflow: hidden;    
-            box-shadow: 4px 4px 0px #000000;    
+            box-shadow: 4px 4px 0px #00d4ff;    
             font-family: 'JetBrains Mono', monospace;    
         }    
         .btn-primary:hover {    
-            background: #ff0000;    
-            border-color: #ff0000;    
-            color: #ffffff;    
-            box-shadow: 6px 6px 0px #ff0000;    
+            background: #00d4ff;    
+            border-color: #00d4ff;    
+            color: #000000;    
+            box-shadow: 6px 6px 0px #000000;    
             transform: translate(-1px, -1px);    
         }    
-        .btn-primary:active { transform: translate(1px, 1px); }    
+        .btn-primary:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0px #000000; }    
     
         .btn-copy {    
             display: inline-flex;    
@@ -210,26 +231,26 @@
             letter-spacing: 0.02em;    
             border-radius: 0;    
             background: #ffffff;    
-            border: 3px solid #000000;    
-            color: #000000;    
+            border: 3px solid #ff00ff;    
+            color: #ff00ff;    
             cursor: pointer;    
             transition: all 0.1s linear;    
             white-space: nowrap;    
             font-family: 'JetBrains Mono', monospace;    
-            box-shadow: 3px 3px 0px #000000;    
+            box-shadow: 3px 3px 0px #ff00ff;    
         }    
         .btn-copy:hover {    
-            border-color: #ff0000;    
-            color: #ff0000;    
-            background: #fffaff;    
-            box-shadow: 3px 3px 0px #ff0000;    
+            border-color: #00ff00;    
+            color: #000000;    
+            background: #00ff00;    
+            box-shadow: 3px 3px 0px #00ff00;    
             transform: translate(-1px, -1px);    
         }    
-        .btn-copy:active { transform: translate(1px, 1px); }    
+        .btn-copy:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px #00ff00; }    
         .btn-copy.copied {    
-            border-color: #000000;    
-            color: #ffffff;    
-            background: #000000;    
+            border-color: #00ff00;    
+            color: #000000;    
+            background: #00ff00;    
             animation: copyPulse 0.3s ease;    
         }    
         @keyframes copyPulse {    
@@ -250,26 +271,26 @@
             font-weight: 700;    
             letter-spacing: 0.02em;    
             border-radius: 0;    
-            background: #ffffff;    
-            border: 2px solid #ffffff;    
-            color: #000000;    
+            background: #000000;    
+            border: 2px solid #ff6600;    
+            color: #ff6600;    
             cursor: pointer;    
             transition: all 0.1s linear;    
             font-family: 'JetBrains Mono', monospace;    
-            box-shadow: 2px 2px 0px #ffffff;    
+            box-shadow: 2px 2px 0px #ff6600;    
         }    
         .copy-result-btn:hover {    
-            background: #000000;    
-            border-color: #000000;    
-            color: #ffffff;    
+            background: #ff6600;    
+            border-color: #ff6600;    
+            color: #000000;    
             box-shadow: 3px 3px 0px #000000;    
             transform: translate(-1px, -1px);    
         }    
         .copy-result-btn.copied {    
-            border-color: #ff0000;    
-            color: #ffffff;    
-            background: #ff0000;    
-            box-shadow: 3px 3px 0px #ff0000;    
+            border-color: #00ff00;    
+            color: #000000;    
+            background: #00ff00;    
+            box-shadow: 3px 3px 0px #00ff00;    
         }    
     
         .toast-container {    
@@ -281,12 +302,12 @@
         }    
         .toast {    
             background: #000000;    
-            color: #ffffff;    
+            color: #00d4ff;    
             font-size: 0.9375rem;    
             font-weight: 700;    
             padding: 18px 28px;    
             border-radius: 0;    
-            box-shadow: 6px 6px 0px #000000;    
+            box-shadow: 6px 6px 0px #00d4ff;    
             display: flex;    
             align-items: center;    
             gap: 12px;    
@@ -294,7 +315,7 @@
             transform: translateY(24px) scale(0.95);    
             transition: all 0.3s linear;    
             pointer-events: auto;    
-            border: 3px solid #000000;    
+            border: 3px solid #00d4ff;    
             font-family: 'JetBrains Mono', monospace;    
         }    
         .toast.show {    
@@ -303,32 +324,33 @@
         }    
     
         footer {    
-            border-top: 4px solid #000000;    
+            border-top: 4px solid #ffff00;    
             background: #ffffff;    
             padding: 20px;    
             font-weight: 700;    
             color: #000000;    
+            box-shadow: inset 0 4px 0px #ffff00;    
         }    
     </style>    
 </head>    
 <body class="antialiased">    
     
-    <nav class="sticky top-0 z-50 w-full bg-white border-b-4 border-black shadow-lg" style="background: #ffffff;">    
+    <nav class="sticky top-0 z-50 w-full bg-white border-b-4 shadow-lg" style="background: #ffffff; border-color: #ff00ff; box-shadow: 0 4px 0px #ff00ff;">    
         <div class="max-w-6xl mx-auto px-5 md:px-8 h-20 flex items-center justify-between">    
             <div class="flex items-center gap-4">    
-                <div class="w-11 h-11 bg-black border-2 border-black flex items-center justify-center box-shadow" style="box-shadow: 4px 4px 0px #000000;">    
-                    <i data-lucide="terminal" class="w-6 h-6 text-black"></i>    
+                <div class="w-11 h-11 bg-black border-3 flex items-center justify-center" style="border-color: #00d4ff; box-shadow: 4px 4px 0px #00d4ff;">    
+                    <i data-lucide="terminal" class="w-6 h-6" style="color: #00d4ff;"></i>    
                 </div>    
                 <span class="font-black text-2xl tracking-tight text-black">    
-                    GoMerch <span class="text-red-600 border-b-3 border-red-600">API Explorer</span>    
+                    GoMerch <span style="color: #ff00ff; border-bottom: 3px solid #ff00ff;">API Explorer</span>    
                 </span>    
             </div>    
             <div class="flex items-center gap-4">    
-                <div class="hidden sm:flex items-center gap-2 px-4 py-2 bg-white border-3 border-black" style="box-shadow: 3px 3px 0px #000000;">    
+                <div class="hidden sm:flex items-center gap-2 px-4 py-2 bg-black border-3" style="border-color: #00ff00; box-shadow: 3px 3px 0px #00ff00;">    
                     <span class="relative flex h-3 w-3">    
-                        <span class="inline-flex h-full w-full bg-red-600 opacity-100"></span>    
+                        <span class="inline-flex h-full w-full" style="background: #ff0000; box-shadow: 0 0 8px #ff0000;"></span>    
                     </span>    
-                    <span class="text-[0.7rem] font-black text-black uppercase tracking-widest">Live Server</span>    
+                    <span class="text-[0.7rem] font-black uppercase tracking-widest" style="color: #00ff00;">Live Server</span>    
                 </div>    
             </div>    
         </div>    
