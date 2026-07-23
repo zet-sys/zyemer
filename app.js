@@ -16,7 +16,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // ================= FUNGSI UPLOAD =================
-async function toUrl(buffer, provider = "pixhost.to") {
+async function toUrl(buffer, provider = "catbox") {
   if (!Buffer.isBuffer(buffer)) {
     throw new Error("Input harus buffer");
   }
@@ -38,7 +38,7 @@ async function toUrl(buffer, provider = "pixhost.to") {
     return text;
   }
 
-  // === DEFAULT PROVIDER (pixhost.to, dll) ===
+  // === FALLBACK PROVIDER (untuk provider lain jika butuh) ===
   const service = new ImageUploadService(provider);
   let { directLink } = await service.uploadFromBinary(buffer, "skyzo.png");
   return directLink;
@@ -205,7 +205,7 @@ app.get('/api/qris/create', async (req, res) => {
             : Buffer.from(data.qr_buffer.data);
 
         // Upload buffer ke image hosting
-        const imageUrl = await toUrl(qrBuffer, "pixhost.to"); // bisa ganti ke "catbox"
+        const imageUrl = await toUrl(qrBuffer, "catbox"); // catbox lebih stabil dari pixhost.to
 
         res.json({
             success: true,
