@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Setup - ZyeGram Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #FDF6E9;
+            --card-bg: #FFFFFF;
+            --ink: #0A0A0A;
+            --text-secondary: #45403A;
+            --accent-cyan: #2B5FFF;
+            --accent-emerald: #00C853;
+            --accent-rose: #FF3B3B;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-deep);
+            background-image:
+                linear-gradient(var(--ink) 2px, transparent 2px),
+                linear-gradient(90deg, var(--ink) 2px, transparent 2px);
+            background-size: 42px 42px;
+            background-position: -1px -1px;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--ink);
+            margin: 0;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-color: rgba(253, 246, 233, 0.86);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .premium-card {
+            background: var(--card-bg);
+            border: 3px solid var(--ink);
+            border-radius: 4px;
+            box-shadow: 8px 8px 0 0 var(--ink);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .premium-card:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 11px 11px 0 0 var(--ink);
+        }
+
+        .glass-input {
+            background: #FFFFFF;
+            border: 2px solid var(--ink);
+            border-radius: 4px;
+            transition: all 0.15s ease;
+            padding: 14px 12px;
+        }
+
+        .glass-input:focus-within {
+            border-color: var(--accent-cyan);
+            box-shadow: 4px 4px 0 0 var(--accent-cyan);
+        }
+
+        .glass-input input,
+        .glass-input textarea {
+            background: transparent;
+            border: none;
+            outline: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            color: var(--ink);
+            width: 100%;
+            font-weight: 600;
+        }
+
+        .glass-input input::placeholder,
+        .glass-input textarea::placeholder {
+            color: #999;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .btn-primary {
+            background: var(--ink);
+            color: #ffffff;
+            font-weight: 900;
+            font-size: 0.95rem;
+            border-radius: 4px;
+            padding: 16px 24px;
+            transition: all 0.15s ease;
+            border: 3px solid var(--ink);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: 0.02em;
+            width: 100%;
+            font-family: 'JetBrains Mono', monospace;
+            box-shadow: 4px 4px 0 0 var(--ink);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            box-shadow: 6px 6px 0 0 var(--accent-cyan);
+            transform: translate(-1px, -1px);
+        }
+
+        .btn-primary:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 0 var(--ink);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--ink);
+            border: 3px solid var(--ink);
+            border-radius: 4px;
+            padding: 14px 20px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.15s ease;
+            box-shadow: 3px 3px 0 0 var(--ink);
+        }
+
+        .btn-secondary:hover {
+            background: var(--ink);
+            color: white;
+            transform: translate(-1px, -1px);
+            box-shadow: 5px 5px 0 0 var(--ink);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 4px;
+            border: 2px solid;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.02em;
+        }
+
+        .status-badge.active {
+            background: var(--accent-emerald);
+            border-color: var(--accent-emerald);
+            color: white;
+        }
+
+        .status-badge.inactive {
+            background: #f0f0f0;
+            border-color: var(--ink);
+            color: var(--ink);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--ink);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 4px;
+            border: 2px solid var(--ink);
+            box-shadow: 4px 4px 0 0 var(--ink);
+            font-weight: 700;
+            z-index: 9999;
+            display: none;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .toast.show {
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            background: var(--accent-emerald);
+            border-color: var(--accent-emerald);
+        }
+
+        .toast.error {
+            background: var(--accent-rose);
+            border-color: var(--accent-rose);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .info-box {
+            background: #f9f9f9;
+            border-left: 4px solid var(--accent-cyan);
+            padding: 16px;
+            border-radius: 4px;
+            margin: 16px 0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .step-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            color: white;
+            font-weight: 900;
+            font-size: 1.1rem;
+            margin-right: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-2xl">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-black mb-2" style="font-family: 'Space Grotesk';">Token Setup</h1>
+                <p class="text-gray-600 text-lg">Simpan tokens untuk history checking otomatis</p>
+            </div>
+
+            <!-- Status Card -->
+            <div class="premium-card mb-6">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold">Status Token</h2>
+                        <% if (hasTokens) { %>
+                            <span class="status-badge active">
+                                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                                Token Tersimpan
+                            </span>
+                        <% } else { %>
+                            <span class="status-badge inactive">
+                                <i data-lucide="circle-x" class="w-5 h-5"></i>
+                                Token Kosong
+                            </span>
+                        <% } %>
+                    </div>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <p><strong>Status:</strong> <% if (hasTokens) { %>Siap menggunakan API auto-managed<% } else { %>Belum ada token tersimpan<% } %></p>
+                        <p><strong>Auto-Refresh:</strong> Setiap 15 menit (otomatis)</p>
+                        <p><strong>Endpoint:</strong> <code>/api/history/auto</code></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <div class="flex gap-3">
+                    <i data-lucide="info" class="w-5 h-5 flex-shrink-0" style="color: var(--accent-cyan);"></i>
+                    <div>
+                        <p style="margin: 0;"><strong>Cara Kerja:</strong></p>
+                        <p style="margin: 8px 0 0 0; font-size: 0.9rem;">
+                            Token yang disimpan akan otomatis di-refresh setiap 15 menit. Kamu cukup hit endpoint <code>/api/history/auto</code> tanpa perlu pass token di query string. Token management semua di handle di server.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <div class="premium-card mb-6">
+                <div class="p-8">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                        <span class="step-badge">1</span>
+                        Input Token
+                    </h2>
+
+                    <form id="tokenForm" class="space-y-6">
+                        <!-- Access Token -->
+                        <div>
+                            <label class="block text-sm font-bold mb-3">Access Token</label>
+                            <div class="glass-input">
+                                <textarea
+                                    name="accessToken"
+                                    placeholder="Paste access token dari GoMerchant..."
+                                    rows="4"
+                                    style="resize: vertical; font-size: 0.85rem;"
+                                ></textarea>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Token ini digunakan untuk akses API GoMerchant. Jangan share ke orang lain!</p>
+                        </div>
+
+                        <!-- Refresh Token -->
+                        <div>
+                            <label class="block text-sm font-bold mb-3">Refresh Token</label>
+                            <div class="glass-input">
+                                <textarea
+                                    name="refreshToken"
+                                    placeholder="Paste refresh token dari GoMerchant..."
+                                    rows="4"
+                                    style="resize: vertical; font-size: 0.85rem;"
+                                ></textarea>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Token ini digunakan untuk auto-refresh access token setiap 15 menit.</p>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn-primary mt-8">
+                            <i data-lucide="save" class="w-5 h-5"></i>
+                            Simpan Tokens
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- API Usage Card -->
+            <div class="premium-card">
+                <div class="p-8">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                        <span class="step-badge">2</span>
+                        Gunakan API
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div>
+                            <p class="font-bold text-sm mb-2">Endpoint:</p>
+                            <div class="bg-gray-100 p-3 rounded border-l-4" style="border-color: var(--accent-cyan);">
+                                <code class="text-sm font-mono">GET /api/history/auto?start_time=2024-01-01T00:00:00Z</code>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="font-bold text-sm mb-2">Contoh Response:</p>
+                            <div class="bg-black text-green-400 p-4 rounded font-mono text-xs overflow-x-auto max-h-200" style="background: #0a0a0a;">
+                                <pre>{
+  "success": true,
+  "total": 42,
+  "data": [
+    {
+      "id": "txn_123",
+      "reference_id": "ref_123",
+      "status": "SUCCESS",
+      "time": "2024-01-15T10:30:00Z",
+      "amount": 50000,
+      "merchant_name": "Toko Saya",
+      ...
+    }
+  ],
+  "tokenRefreshStatus": "using_current_token"
+}</pre>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded text-sm">
+                            <p class="font-bold text-blue-900 mb-2">💡 Catatan:</p>
+                            <ul class="text-blue-800 space-y-1" style="margin: 0; padding-left: 20px;">
+                                <li>Jangan perlu pass <code>token</code> di query string</li>
+                                <li>Token otomatis di-refresh tiap 15 menit</li>
+                                <li>Jika token expired, auto-refresh akan triggered</li>
+                                <li>Query parameter <code>start_time</code> opsional (default: 7 hari lalu)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="mt-6 text-center">
+                <a href="/" class="btn-secondary" style="display: inline-block; text-decoration: none;">
+                    <i data-lucide="arrow-left" class="w-4 h-4" style="display: inline;"></i>
+                    Kembali ke Halaman Utama
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        lucide.createIcons();
+
+        const form = document.getElementById('tokenForm');
+        const toast = document.getElementById('toast');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const accessToken = document.querySelector('textarea[name="accessToken"]').value.trim();
+            const refreshToken = document.querySelector('textarea[name="refreshToken"]').value.trim();
+
+            if (!accessToken || !refreshToken) {
+                showToast('Kedua token harus diisi!', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/tokens', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        accessToken,
+                        refreshToken
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('✅ Tokens berhasil disimpan! Auto-refresh aktif setiap 15 menit.', 'success');
+                    
+                    // Clear form
+                    form.reset();
+                    
+                    // Redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    showToast('❌ ' + data.error, 'error');
+                }
+            } catch (e) {
+                showToast('❌ Error: ' + e.message, 'error');
+            }
+        });
+
+        function showToast(message, type = 'info') {
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
