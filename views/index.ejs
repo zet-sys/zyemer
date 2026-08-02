@@ -328,6 +328,95 @@
             border-top: 3px solid var(--ink);
             background: #FFFFFF;
         }
+
+        /* Password Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 3px solid var(--ink);
+            border-radius: 4px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 12px 12px 0 0 var(--shadow-color);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--ink);
+        }
+
+        .btn-token-setup {
+            background: var(--accent-cyan);
+            color: #FFFFFF;
+            font-weight: 800;
+            padding: 16px 24px;
+            border: 3px solid var(--accent-cyan);
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease;
+            box-shadow: 4px 4px 0 0 var(--shadow-color);
+        }
+
+        .btn-token-setup:hover {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 0 var(--shadow-color);
+        }
     </style>
 </head>    
 <body class="antialiased">    
@@ -356,6 +445,20 @@
     
     <main class="max-w-6xl mx-auto p-4 sm:p-6 md:p-10 pb-32">    
         <div class="space-y-6 sm:space-y-8">    
+        
+            <!-- Token Setup Button -->
+            <div class="premium-card p-6 sm:p-8">
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div>
+                        <h2 class="text-2xl font-black mb-2">⚡ Auto Token Manager</h2>
+                        <p class="text-gray-600 text-sm">Setup token sekali, auto-refresh setiap 15 menit. API auto-managed tanpa perlu pass token di setiap request!</p>
+                    </div>
+                    <button class="btn-token-setup" onclick="openPasswordModal()">
+                        <i data-lucide="key" class="w-5 h-5"></i>
+                        Setup Tokens
+                    </button>
+                </div>
+            </div>
                 
             <div class="premium-card p-6 sm:p-8" data-endpoint="auth-otp">    
                 <div class="flex flex-wrap items-center justify-between gap-4 mb-6">    
@@ -561,11 +664,78 @@
             <span id="toast-msg">Copied!</span>    
         </div>    
     </div>    
+
+    <!-- Password Modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔐 Verify Password</h2>
+                <button class="modal-close" onclick="closePasswordModal()">×</button>
+            </div>
+            <form id="passwordForm" class="space-y-4" onsubmit="verifyPassword(event)">
+                <div>
+                    <label class="block text-sm font-bold mb-2">Masukan Password</label>
+                    <input type="password" id="passwordInput" placeholder="Enter password" class="w-full px-4 py-3 border-2 border-black rounded-sm focus:outline-none focus:border-blue-500" required>
+                </div>
+                <button type="submit" class="btn-primary w-full">
+                    <i data-lucide="lock" class="w-5 h-5"></i>
+                    Verify & Setup Tokens
+                </button>
+            </form>
+        </div>
+    </div>
     
     <script>    
         lucide.createIcons();    
     
-        const BASE_URL = window.location.origin;    
+        const BASE_URL = window.location.origin;
+
+        // Password Modal Functions
+        function openPasswordModal() {
+            document.getElementById('passwordModal').classList.add('show');
+            document.getElementById('passwordInput').focus();
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('show');
+            document.getElementById('passwordForm').reset();
+        }
+
+        async function verifyPassword(e) {
+            e.preventDefault();
+            const password = document.getElementById('passwordInput').value;
+
+            try {
+                const response = await fetch('/api/auth/verify-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('✅ Password verified! Redirecting to token setup...', '✅');
+                    closePasswordModal();
+                    setTimeout(() => {
+                        window.location.href = '/auth/token-setup';
+                    }, 1000);
+                } else {
+                    showToast('❌ ' + data.error, '❌');
+                }
+            } catch (e) {
+                showToast('❌ Error: ' + e.message, '❌');
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('passwordModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'passwordModal') {
+                closePasswordModal();
+            }
+        });    
     
         function getVal(id) {    
             const el = document.getElementById(id);    
