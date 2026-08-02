@@ -4,6 +4,8 @@ const GoMerchant = require('./GoMerchant');
 const { ImageUploadService } = require("node-upload-images");
 const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const FormData = require("form-data");
+const session = require('express-session');
+const tokenManager = require('./tokenManager');
 
 const app = express();
 const sdk = new GoMerchant();
@@ -12,8 +14,26 @@ app.set('json spaces', 2);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Session middleware untuk track password verification
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'zyemer-super-secret-key-2024',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+}));
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// Setup default password jika belum ada
+(async () => {
+  if (!tokenManager.password) {
+    // 🔐 UBAH PASSWORD DI SINI
+    const PASSWORD = 'zyemer'; // ← GANTI DENGAN PASSWORD KAMU
+    await tokenManager.setPassword(PASSWORD);
+    console.log('✅ Password set: ' + PASSWORD);
+  }
+})();
 
 // ================= FUNGSI UPLOAD =================
 async function toUrl(buffer, provider = "catbox") {
@@ -46,10 +66,94 @@ async function toUrl(buffer, provider = "catbox") {
 
 // ================= ROUTE HALAMAN =================
 app.get('/', (req, res) => {
-    res.render('index');
+    res.render('index', { isPasswordProtectedReady: tokenManager.isInitialized });
+});
+
+// Token setup page (protected by password)
+app.get('/auth/token-setup', (req, res) => {
+    if (!req.session.passwordVerified) {
+        return res.status(403).render('index', { 
+            error: 'Kamu perlu verify password dulu untuk akses token setup!',
+            isPasswordProtectedReady: tokenManager.isInitialized,
+            showPasswordPrompt: true
+        });
+    }
+    res.render('token-setup', { hasTokens: tokenManager.hasTokens() });
 });
 
 // ================= AUTH =================
+// Verify password untuk akses token setup
+app.post('/api/auth/verify-password', async (req, res) => {
+    try {
+        const { password } = req.body;
+        if (!password) {
+            return res.status(400).json({ success: false, error: 'Password wajib diisi' });
+        }
+
+        const isValid = await tokenManager.verifyPassword(password);
+        if (!isValid) {
+            return res.status(401).json({ success: false, error: 'Password salah!' });
+        }
+
+        // Mark session as password verified
+        req.session.passwordVerified = true;
+        res.json({ success: true, message: 'Password verified! Redirect ke token setup...' });
+    } catch (e) {
+        res.status(400).json({ success: false, error: e.message });
+    }
+});
+
+// Setup/Save tokens
+app.post('/api/auth/tokens', async (req, res) => {
+    try {
+        if (!req.session.passwordVerified) {
+            return res.status(403).json({ success: false, error: 'Verify password dulu!' });
+        }
+
+        const { accessToken, refreshToken } = req.body;
+        
+        if (!accessToken || !refreshToken) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Access token dan refresh token wajib diisi' 
+            });
+        }
+
+        // Validate tokens dengan test API call
+        try {
+            await sdk.getMe(accessToken);
+        } catch (e) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Access token tidak valid! ' + (e.response?.data?.message || e.message)
+            });
+        }
+
+        // Save tokens
+        tokenManager.setTokens(accessToken, refreshToken);
+
+        // Setup auto-refresh setiap 15 menit
+        tokenManager.setupAutoRefresh(sdk, 15 * 60 * 1000);
+
+        res.json({ 
+            success: true, 
+            message: 'Tokens saved! Auto-refresh aktif setiap 15 menit.',
+            hasTokens: true
+        });
+    } catch (e) {
+        res.status(400).json({ success: false, error: e.message });
+    }
+});
+
+// Get current token status
+app.get('/api/auth/token-status', (req, res) => {
+    res.json({
+        hasTokens: tokenManager.hasTokens(),
+        lastRefresh: tokenManager.tokens.lastRefresh,
+        passwordProtected: tokenManager.isInitialized
+    });
+});
+
 // Kirim OTP
 app.get('/auth/otp', async (req, res) => {
     try {
@@ -112,6 +216,7 @@ app.get('/api/me', async (req, res) => {
     }
 });
 
+// History dengan token manual (old endpoint, tetap support)
 app.get('/api/history', async (req, res) => {
     try {
         const token = req.query.token;
@@ -169,6 +274,150 @@ app.get('/api/history', async (req, res) => {
             total: data.length,
             data
         });
+
+    } catch (e) {
+        res.status(400).json({
+            success: false,
+            error: e.response?.data || e.message
+        });
+    }
+});
+
+// ⭐ AUTO-MANAGED HISTORY API - Token tersimpan, auto-refresh setiap 15 menit
+app.get('/api/history/auto', async (req, res) => {
+    try {
+        // Cek apakah tokens sudah tersimpan
+        if (!tokenManager.hasTokens()) {
+            return res.status(401).json({
+                success: false,
+                error: 'Tokens belum tersimpan! Silahkan setup di /auth/token-setup dulu'
+            });
+        }
+
+        const { accessToken, refreshToken } = tokenManager.getTokens();
+
+        try {
+            // Try fetch dengan current token
+            const user = await sdk.getMe(accessToken);
+
+            const defaultStartTime = new Date(
+                Date.now() - (7 * 24 * 60 * 60 * 1000)
+            ).toISOString();
+
+            const startTime = req.query.start_time || defaultStartTime;
+
+            const result = await sdk.getJournals(
+                accessToken,
+                user.user.merchant_id,
+                startTime
+            );
+
+            const data = (result.hits || [])
+                .filter(item =>
+                    item?.metadata?.transaction?.payment_type === 'qris'
+                )
+                .map(item => {
+                    const aspi = item.metadata?.provider_metadata?.aspi;
+
+                    return {
+                        id: item.id,
+                        reference_id: item.reference_id,
+                        status: item.status,
+                        time: item.time,
+
+                        amount: aspi?.data?.amount || 0,
+
+                        issuer: aspi?.issuer || null,
+                        acquirer: aspi?.acquirer || null,
+
+                        merchant_name: aspi?.data?.merchant_name || null,
+                        merchant_id: aspi?.data?.merchant_id || null,
+                        merchant_city: aspi?.data?.merchant_city || null,
+
+                        terminal_label:
+                            aspi?.data?.additional_data?.terminal_label || null
+                    };
+                });
+
+            res.json({
+                success: true,
+                total: data.length,
+                data,
+                tokenRefreshStatus: 'using_current_token'
+            });
+
+        } catch (e) {
+            // Jika current token error, coba refresh otomatis
+            if (e.response?.status === 401 || e.message.includes('401')) {
+                console.log('🔄 Current token expired, trying auto-refresh...');
+                
+                try {
+                    const refreshResult = await sdk.refreshToken(refreshToken);
+                    const newAccessToken = refreshResult.data.access_token;
+                    
+                    // Update token yang tersimpan
+                    tokenManager.updateAccessToken(newAccessToken);
+                    console.log('✅ Token auto-refreshed successfully!');
+
+                    // Retry fetch dengan token baru
+                    const user = await sdk.getMe(newAccessToken);
+                    const defaultStartTime = new Date(
+                        Date.now() - (7 * 24 * 60 * 60 * 1000)
+                    ).toISOString();
+
+                    const startTime = req.query.start_time || defaultStartTime;
+
+                    const result = await sdk.getJournals(
+                        newAccessToken,
+                        user.user.merchant_id,
+                        startTime
+                    );
+
+                    const data = (result.hits || [])
+                        .filter(item =>
+                            item?.metadata?.transaction?.payment_type === 'qris'
+                        )
+                        .map(item => {
+                            const aspi = item.metadata?.provider_metadata?.aspi;
+
+                            return {
+                                id: item.id,
+                                reference_id: item.reference_id,
+                                status: item.status,
+                                time: item.time,
+
+                                amount: aspi?.data?.amount || 0,
+
+                                issuer: aspi?.issuer || null,
+                                acquirer: aspi?.acquirer || null,
+
+                                merchant_name: aspi?.data?.merchant_name || null,
+                                merchant_id: aspi?.data?.merchant_id || null,
+                                merchant_city: aspi?.data?.merchant_city || null,
+
+                                terminal_label:
+                                    aspi?.data?.additional_data?.terminal_label || null
+                            };
+                        });
+
+                    return res.json({
+                        success: true,
+                        total: data.length,
+                        data,
+                        tokenRefreshStatus: 'auto_refreshed_now'
+                    });
+
+                } catch (refreshErr) {
+                    return res.status(401).json({
+                        success: false,
+                        error: 'Token expired dan refresh gagal! Silahkan setup ulang token di /auth/token-setup',
+                        refreshError: refreshErr.response?.data || refreshErr.message
+                    });
+                }
+            }
+
+            throw e;
+        }
 
     } catch (e) {
         res.status(400).json({
